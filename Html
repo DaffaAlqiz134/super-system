@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DaffaV1</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #2e65e5;
+    }
+    canvas {
+      background: #111;
+      margin-top: 20px;
+      touch-action: none;
+    }
+    h1 {
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>DaffaV1 - Relaxing Block Game</h1>
+  <canvas id="game" width="300" height="300"></canvas>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    const blockSize = 30;
+    const rows = 10;
+    const cols = 10;
+
+    let board = Array.from({ length: rows }, () => Array(cols).fill(null));
+
+    const colors = ['red', 'yellow', 'blue', 'green', 'orange', 'purple', 'cyan'];
+
+    let draggingBlock = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    function drawBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (board[r][c]) {
+            ctx.fillStyle = board[r][c];
+            ctx.fillRect(c * blockSize, r * blockSize, blockSize, blockSize);
+            ctx.strokeRect(c * blockSize, r * blockSize, blockSize, blockSize);
+          }
+        }
+      }
+      if (draggingBlock) {
+        ctx.fillStyle = draggingBlock.color;
+        for (let r = 0; r < draggingBlock.shape.length; r++) {
+          for (let c = 0; c < draggingBlock.shape[r].length; c++) {
+            if (draggingBlock.shape[r][c]) {
+              ctx.fillRect(
+                draggingBlock.x + c * blockSize,
+                draggingBlock.y + r * blockSize,
+                blockSize,
+                blockSize
+              );
+              ctx.strokeRect(
+                draggingBlock.x + c * blockSize,
+                draggingBlock.y + r * blockSize,
+                blockSize,
+                blockSize
+              );
+            }
+          }
+        }
+      }
+    }
+
+    function spawnDraggableBlock() {
+      draggingBlock = {
+        shape: [
+          [1, 1],
+          [1, 1]
+        ],
+        color: colors[Math.floor(Math.random() * colors.length)],
+        x: 50,
+        y: 50
+      };
+    }
+
+    function placeBlockToBoard(block) {
+      const row = Math.floor(block.y / blockSize);
+      const col = Math.floor(block.x / blockSize);
+      for (let r = 0; r < block.shape.length; r++) {
+        for (let c = 0; c < block.shape[r].length; c++) {
+          if (block.shape[r][c]) {
+            const br = row + r;
+            const bc = col + c;
+            if (br >= 0 && br < rows && bc >= 0 && bc < cols) {
+              board[br][bc] = block.color;
+            }
+          }
+        }
+      }
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      if (draggingBlock) {
+        dragOffset.x = e.offsetX - draggingBlock.x;
+        dragOffset.y = e.offsetY - draggingBlock.y;
+      }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      if (draggingBlock && e.buttons === 1) {
+        draggingBlock.x = e.offsetX - dragOffset.x;
+        draggingBlock.y = e.offsetY - dragOffset.y;
+        drawBoard();
+      }
+    });
+
+    canvas.addEventListener('mouseup', e => {
+      if (draggingBlock) {
+        placeBlockToBoard(draggingBlock);
+        draggingBlock = null;
+        drawBoard();
+        setTimeout(spawnDraggableBlock, 500);
+      }
+    });
+
+    drawBoard();
+    spawnDraggableBlock();
+  </script>
+</body>
+</html>
